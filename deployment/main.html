@@ -7,6 +7,7 @@
     <style>
         body {
             margin: 0;
+            margin-top: 5%;
             font-family: Arial, sans-serif;
             color: #ffffff;
             background-image: url('/assets/gradient-blur.webp');
@@ -68,7 +69,7 @@
             border-radius: 50px;
             width: calc(15% - 20px);
             box-sizing: border-box;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(6px);
             transition: transform 0.3s, box-shadow 0.3s;
             cursor: pointer;
         }
@@ -87,10 +88,21 @@
             background-color: #FB4846;
             color: #161616;
             cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-left: 10px; /* Add margin to separate buttons */
+        }
+        .search-bar input {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #ffffff;
+            color: #161616;
+            cursor: pointer;
             margin-left: 10px; /* Add margin to separate buttons */
         }
         .search-bar button:hover {
-            background-color: #FB4846;
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
@@ -98,7 +110,8 @@
     <div class="header">
         <img src="\assets\Movie-Whisperer.png" alt="Logo">
         <div class="search-bar">    
-            <button>Back to User Choice</button>
+            <input type="text" id="user-id-input" placeholder="Enter User ID">
+            <button id="choose-user-btn">Choose User</button>
         </div>
     </div>
     <div class="main" id="main-content">
@@ -108,41 +121,71 @@
         <p id="popup-content"></p>
     </div>
     <script>
-        async function fetchMovies() {
-            const response = await fetch('movies.csv');
-            const data = await response.text();
-            console.log('CSV Data:', data); // Debugging step
-            return data.split('\n').slice(1).map(line => {
-                const [title, image, genre, year, avg_rating] = line.split(',');
-                if (title && image && genre && year && avg_rating) {
-                    return { title, image, genre, year, avg_rating };
-                }
-            }).filter(movie => movie); // Filter out undefined movies
-        }
+        document.getElementById('choose-user-btn').addEventListener('click', async function() {
+        var userId = document.getElementById('user-id-input').value;
+        await updateUserId(userId);
+        await rerenderMovieGrid();
+    });
 
-        function createMovieHTML(movie) {
-            return `
-                <div class="movie">
-                    <img src="${movie.image}" alt="${movie.title.replace(/'/g, "\\'")}">
-                    <p>${movie.title} (${movie.genre})</p>
-                </div>
-            `;
-        }
-
-        async function renderMovies() {
-            const mainContent = document.getElementById('main-content');
-            if (!mainContent) {
-                console.error('main-content element not found');
-                return;
+    async function updateUserId(userId) {
+        // Call the server endpoint to update the movies.csv file
+        try {
+            const response = await fetch(`/update_movies?user_id=${userId}`);
+            if (!response.ok) {
+                throw new Error('Failed to update movies.csv');
             }
-            const movies = await fetchMovies();
-            console.log('Movies:', movies); // Debugging step
-            mainContent.innerHTML = `
-                <div class="movie-grid">
-                    ${movies.map(createMovieHTML).join('')}
-                </div>
-            `;
+        } catch (error) {
+            console.error('Error:', error);
         }
+    }
+
+    async function rerenderMovieGrid() {
+        const mainContent = document.getElementById('main-content');
+        if (!mainContent) {
+            console.error('main-content element not found');
+            return;
+        }
+        const movies = await fetchMovies();
+        mainContent.innerHTML = `
+            <div class="movie-grid">
+                ${movies.map(createMovieHTML).join('')}
+            </div>
+        `;
+    }
+
+    async function fetchMovies() {
+        const response = await fetch('movies.csv');
+        const data = await response.text();
+        return data.split('\n').slice(1).map(line => {
+            const [title, image, genre, year, avg_rating] = line.split(',');
+            if (title && image && genre && year && avg_rating) {
+                return { title, image, genre, year, avg_rating };
+            }
+        }).filter(movie => movie); // Filter out undefined movies
+    }
+
+    function createMovieHTML(movie) {
+        return `
+            <div class="movie">
+                <img src="${movie.image}" alt="${movie.title.replace(/'/g, "\\'")}">
+                <p>${movie.title} (${movie.genre})</p>
+            </div>
+        `;
+    }
+
+    async function renderMovies() {
+        const mainContent = document.getElementById('main-content');
+        if (!mainContent) {
+            console.error('main-content element not found');
+            return;
+        }
+        const movies = await fetchMovies();
+        mainContent.innerHTML = `
+            <div class="movie-grid">
+                ${movies.map(createMovieHTML).join('')}
+            </div>
+        `;
+    }
         document.addEventListener('DOMContentLoaded', renderMovies);
         </script>
     
