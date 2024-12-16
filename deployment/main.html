@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netflix Clone</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: #ffffff;
+            background-image: url('/assets/gradient-blur.webp');
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        .header {
+            background-color: #161616;
+            padding: 20px 20px;
+            text-align: center;
+            position: fixed;
+            width: 100%;
+            height: 4%;
+            top: 0;
+            z-index: 1000;
+        }
+        .header img {
+            width: 300px; /* Increase the size of the logo */
+            position: absolute;
+            top: 10px; /* Adjust as needed */
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .search-bar {
+            display: flex;
+            align-items: center;
+            position: absolute;
+            top: 50%;
+            right: 100px;
+            transform: translateY(-50%);
+        }
+        .search-bar select {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        .main {
+            padding: 80px 40px 40px; /* Adjust padding to account for the fixed header */
+            margin-top: 20px; /* Add margin to create space below the header */
+        }
+        .main h1 {
+            color: #FB4846;
+        }
+        .main p {
+            color: #d3d3d3;
+        }
+        .movie-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 90px; /* Increase the gap to 40px */
+            justify-content: center; /* Align the grid to center */
+            padding-top: 20px; /* Add padding to create space above the movie grid */
+        }
+        .movie {
+            background-color: rgba(68, 68, 68, 0.5);
+            padding: 20px;
+            text-align: center;
+            border-radius: 50px;
+            width: calc(15% - 20px);
+            box-sizing: border-box;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        .movie:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        .movie img {
+            width: 100%;
+            border-radius: 36.5px;
+        }
+        .search-bar button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #FB4846;
+            color: #161616;
+            cursor: pointer;
+            margin-left: 10px; /* Add margin to separate buttons */
+        }
+        .search-bar button:hover {
+            background-color: #FB4846;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="\assets\Movie-Whisperer.png" alt="Logo">
+        <div class="search-bar">    
+            <button>Back to User Choice</button>
+        </div>
+    </div>
+    <div class="main" id="main-content">
+        <div style="height: 100px;"></div>  
+    </div>
+    <div class="popup" id="popup">
+        <p id="popup-content"></p>
+    </div>
+    <script>
+        async function fetchMovies() {
+            const response = await fetch('movies.csv');
+            const data = await response.text();
+            console.log('CSV Data:', data); // Debugging step
+            return data.split('\n').slice(1).map(line => {
+                const [title, image, genre, year, avg_rating] = line.split(',');
+                if (title && image && genre && year && avg_rating) {
+                    return { title, image, genre, year, avg_rating };
+                }
+            }).filter(movie => movie); // Filter out undefined movies
+        }
+
+        function createMovieHTML(movie) {
+            return `
+                <div class="movie">
+                    <img src="${movie.image}" alt="${movie.title.replace(/'/g, "\\'")}">
+                    <p>${movie.title} (${movie.genre})</p>
+                </div>
+            `;
+        }
+
+        async function renderMovies() {
+            const mainContent = document.getElementById('main-content');
+            if (!mainContent) {
+                console.error('main-content element not found');
+                return;
+            }
+            const movies = await fetchMovies();
+            console.log('Movies:', movies); // Debugging step
+            mainContent.innerHTML = `
+                <div class="movie-grid">
+                    ${movies.map(createMovieHTML).join('')}
+                </div>
+            `;
+        }
+        document.addEventListener('DOMContentLoaded', renderMovies);
+        </script>
+    
+</body>
+</html>
